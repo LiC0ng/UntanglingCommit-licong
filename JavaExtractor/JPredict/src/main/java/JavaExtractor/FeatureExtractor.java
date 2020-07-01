@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import JavaExtractor.Visitors.SubTreeVisitor;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import JavaExtractor.Common.DiffChunk;
 import JavaExtractor.Visitors.ChangedLineVisitor;
+import com.github.javaparser.ast.Node;
 
 @SuppressWarnings("StringEquality")
 public class FeatureExtractor {
@@ -19,14 +21,18 @@ public class FeatureExtractor {
 	final static String downSymbol = "_";
 
 	public HashMap<DiffChunk, ArrayList<String>> extractFeatures(String code, ArrayList<DiffChunk> chunks) throws ParseException, IOException {
-		CompilationUnit compilationUnit = parseFileWithRetries(code);
-		ChangedLineVisitor changedLineVisitor = new ChangedLineVisitor(chunks);
+		String json = "";
+		for (int i = 0; i < chunks.size(); i++) {
+			CompilationUnit compilationUnit = parseFileWithRetries(code);
+			SubTreeVisitor visitor = new SubTreeVisitor(chunks.get(i));
+			Node subtree = visitor.getSubTree(compilationUnit);
+			visitor.convertASTToJson(subtree);
+			json += "subtree:";
+			json += visitor.getJsonOfAst();
+		}
+		System.out.println(json);
 
-		changedLineVisitor.visitDepthFirst(compilationUnit);
-
-		HashMap<DiffChunk, ArrayList<String>> map = changedLineVisitor.getLabelMap();
-
-		return map;
+		return null;
 	}
 
 	public HashMap<DiffChunk, ArrayList<String>> extractFeaturesWithId(String code, ArrayList<DiffChunk> chunks) throws ParseException, IOException {

@@ -40,4 +40,16 @@ public class DiffChunk {
         return this.id == chunk.id;
     }
 
+    public boolean equalPosition(Position begin, Position end) {
+        return begin.line == this.begin && this.end == end.line;
+    }
+
+    public boolean containsPosition(Position begin, Position end) {
+        return begin.line <= this.begin && this.end <= end.line;
+    }
+
+    public boolean notContainsPosition(Position begin, Position end) {
+        return this.begin > end.line || this.end < begin.line;
+    }
+
 }
