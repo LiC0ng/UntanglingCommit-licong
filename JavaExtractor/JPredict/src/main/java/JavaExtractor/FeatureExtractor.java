@@ -29,6 +29,17 @@ public class FeatureExtractor {
 		return map;
 	}
 
+	public HashMap<DiffChunk, ArrayList<String>> extractFeaturesWithId(String code, ArrayList<DiffChunk> chunks) throws ParseException, IOException {
+		CompilationUnit compilationUnit = parseFileWithRetries(code);
+		ChangedLineVisitor changedLineVisitor = new ChangedLineVisitor(chunks);
+
+		changedLineVisitor.visitDepthFirst(compilationUnit);
+
+		HashMap<DiffChunk, ArrayList<String>> map = changedLineVisitor.getLabelMap();
+
+		return map;
+	}
+
 	private CompilationUnit parseFileWithRetries(String code) throws IOException {
 		final String classPrefix = "public class Test {";
 		final String classSuffix = "}";

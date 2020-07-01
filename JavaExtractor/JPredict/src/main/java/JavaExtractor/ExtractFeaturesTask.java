@@ -62,8 +62,12 @@ public class ExtractFeaturesTask implements Callable<Void> {
 			code = Common.EmptyString;
 		}
 		FeatureExtractor featureExtractor = new FeatureExtractor();
-
-		HashMap<DiffChunk, ArrayList<String>> map = featureExtractor.extractFeatures(code, this.chunks);
+		HashMap<DiffChunk, ArrayList<String>> map;
+		if (m_CommandLineValues.WithId) {
+			map = featureExtractor.extractFeaturesWithId(code, this.chunks);
+		} else {
+			map = featureExtractor.extractFeatures(code, this.chunks);
+		}
 
 		return map;
 	}
