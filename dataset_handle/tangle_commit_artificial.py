@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+# modified on sanada's code: https://github.com/tklab-group/UntanglingCommit-sanada 
 from git import Repo
 import os
 import itertools
 from argparse import ArgumentParser
+
 
 def main():
     parser = ArgumentParser()
@@ -49,7 +51,7 @@ def main():
 
         tangled_list.append(pair)
 
-    with open(args.output_path, 'w') as output_file: #, open(args.output_path + '.info', 'w') as info_file:
+    with open(args.output_path, 'w') as output_file:
         for pair in tangled_list:
             output_file.write('{} {}\n'.format(pair[0]['hash'], pair[1]['hash']))
             '''
@@ -61,6 +63,7 @@ def main():
             '''
 
     print('done')
+
 
 if __name__ == '__main__':
     main()
