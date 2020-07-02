@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import git
+# modified on sanada's code: https://github.com/tklab-group/UntanglingCommit-sanada 
 from git import Repo
 import re
 from argparse import ArgumentParser
+
 
 def main():
     parser = ArgumentParser()
@@ -20,7 +21,7 @@ def main():
     for commit_hash in commit_hashs:
         if commit_hash == "":
             continue
-        repo.git.checkout(commit_hash)
+        repo.git.checkout('-f', commit_hash)
         head = repo.head.commit
         parent = head.parents[0]
         save_commit(repo, head, parent, args.range_dir)
@@ -42,11 +43,11 @@ def save_commit(repo, head, parent, out_dir):
         print('ADDED CHUNKS')
         print(added_chunks)
         if len(added_chunks) > 0:
-            added_files.append({'path':diff.b_path, 'chunks':added_chunks})
+            added_files.append({'path': diff.b_path, 'chunks': added_chunks})
         print('REMOVED CHUNKS')
         print(removed_chunks)
         if len(removed_chunks) > 0:
-            removed_files.append({'path':diff.a_path, 'chunks':removed_chunks})
+            removed_files.append({'path': diff.a_path, 'chunks': removed_chunks})
 
     with open(out_dir + '/' + head.hexsha + '_added.txt', mode='w') as out:
         for added_file in added_files:

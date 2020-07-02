@@ -21,4 +21,8 @@ for repo in $(ls dataset/pre); do
   echo "Getting ${repo} tangled commits"
   ${PYTHON} dataset_handle/tangle_commit_artificial.py -r ${SOURCE_DATASET} -i ${COMMIT_CSV} -o ${TANGLED_CSV}
 
+  echo "Fetching ${repo} change range info"
+  ${PYTHON} dataset_handle/parse_git_diff.py --repo ${SOURCE_DATASET} \
+    --commit_file ${COMMIT_CSV} --range_dir ${RANGE_DIR}
+
 done
