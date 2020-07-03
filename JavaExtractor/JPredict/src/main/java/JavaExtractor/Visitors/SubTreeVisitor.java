@@ -1,9 +1,14 @@
 package JavaExtractor.Visitors;
 
 import JavaExtractor.Common.DiffChunk;
+import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.body.VariableDeclaratorId;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.imports.SingleTypeImportDeclaration;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.TreeVisitor;
 
 import java.util.ArrayList;
@@ -23,6 +28,22 @@ public class SubTreeVisitor extends TreeVisitor {
 
     @Override
     public void process(Node node) {
+
+    }
+
+    public void getNameWithId(Node node) {
+        if (node instanceof NameExpr) {
+            jsonOfAst.append("\"").append(((NameExpr) node).getName()).append("\", ");
+        } else if (node instanceof ClassOrInterfaceType) {
+            jsonOfAst.append("\"").append(((ClassOrInterfaceType) node).getName()).append("\", ");
+        } else if (node instanceof VariableDeclaratorId) {
+            jsonOfAst.append("\"").append(((VariableDeclaratorId) node).getName()).append("\", ");
+        } else {
+            jsonOfAst.append("\"").append(node.getClass().getSimpleName()).append("\", ");
+        }
+    }
+
+    public void getNameWithoutId(Node node) {
         if (node instanceof NameExpr) {
             jsonOfAst.append("\"").append("NameExpr_").append(((NameExpr) node).getName()).append("\", ");
         } else {
@@ -39,19 +60,36 @@ public class SubTreeVisitor extends TreeVisitor {
     }
 
 
-    public void convertASTToJson(Node node) {
-        if (node instanceof Comment) {
-            jsonOfAst.deleteCharAt(jsonOfAst.length() - 1);
-            return;
-        }
+    public void convertASTToJsonWithId(Node node) {
         jsonOfAst.append("{\"node\": ");
-        this.process(node);
+        this.getNameWithId(node);
         Iterator var2 = node.getChildrenNodes().iterator();
         jsonOfAst.append("\"children\": [");
 
         while (var2.hasNext()) {
             Node child = (Node) var2.next();
-            this.convertASTToJson(child);
+            this.convertASTToJsonWithId(child);
+
+            if (var2.hasNext()) {
+                jsonOfAst.append(",");
+            }
+        }
+        jsonOfAst.append("]}");
+    }
+
+    public void convertASTToJsonWithoutId(Node node) {
+        if (node instanceof Comment) {
+            jsonOfAst.deleteCharAt(jsonOfAst.length() - 1);
+            return;
+        }
+        jsonOfAst.append("{\"node\": ");
+        this.getNameWithoutId(node);
+        Iterator var2 = node.getChildrenNodes().iterator();
+        jsonOfAst.append("\"children\": [");
+
+        while (var2.hasNext()) {
+            Node child = (Node) var2.next();
+            this.convertASTToJsonWithoutId(child);
 
             if (var2.hasNext()) {
                 jsonOfAst.append(",");
@@ -62,32 +100,36 @@ public class SubTreeVisitor extends TreeVisitor {
 
     public Node getSubTree(Node node) {
         Node childrenNode;
-        if (chunk.equalPosition(node.getBegin(), node.getEnd())) {
+        if (node instanceof CompilationUnit) {
+            rootNode = node;
+        }
+        if (node.getChildrenNodes().isEmpty() || node instanceof PackageDeclaration) {
             return node;
         }
-        if (node.getChildrenNodes().isEmpty()) {
-            return node;
+        if (node instanceof SingleTypeImportDeclaration &&
+                (node.getChildrenNodes().isEmpty() || !(node.getChildrenNodes().get(0) instanceof NameExpr))) {
+            String a = ((SingleTypeImportDeclaration) node).getType().getName();
+            String[] names = ((SingleTypeImportDeclaration) node).getType().getName().split("\\.");
+            Node temp = node;
+            for (String name : names) {
+                NameExpr nameNode = new NameExpr(node.getRange(), name);
+                nameNode.setParentNode(temp);
+                temp = nameNode;
+            }
         }
         for (int i = 0; i < node.getChildrenNodes().size(); i++) {
             childrenNode = node.getChildrenNodes().get(i);
-            if (chunk.containsPosition(childrenNode.getBegin(), childrenNode.getEnd())) {
+            if (chunk.containsPosition(node.getBegin(), node.getEnd(),childrenNode.getBegin(), childrenNode.getEnd())) {
                 childrenNode.setParentNode(null);
                 rootNode = childrenNode;
                 getSubTree(rootNode);
                 break;
-            } else if (chunk.notContainsPosition(childrenNode.getBegin(), childrenNode.getEnd()) || childrenNode instanceof NameExpr) {
+            } else if (chunk.notContainsPosition(childrenNode.getBegin(), childrenNode.getEnd())
+                    || childrenNode instanceof Comment) {
                 childrenNode.setParentNode(null);
                 i -= 1;
             } else {
-                for (int j = 0; j < childrenNode.getChildrenNodes().size(); j++) {
-                    if (chunk.notContainsPosition(childrenNode.getChildrenNodes().get(j).getBegin(), childrenNode.getChildrenNodes().get(j).getEnd())
-                            || childrenNode.getChildrenNodes().get(j) instanceof NameExpr) {
-                        childrenNode.getChildrenNodes().get(j).setParentNode(null);
-                        j -= 1;
-                        continue;
-                    }
-                    getSubTree(childrenNode.getChildrenNodes().get(j));
-                }
+                getSubTree(childrenNode);
             }
         }
         return rootNode;
