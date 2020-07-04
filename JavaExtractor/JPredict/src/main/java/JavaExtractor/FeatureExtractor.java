@@ -1,9 +1,12 @@
 package JavaExtractor;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import JavaExtractor.Common.Common;
 import JavaExtractor.Visitors.SubTreeVisitor;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -20,26 +23,37 @@ public class FeatureExtractor {
 	final static String upSymbol = "^";
 	final static String downSymbol = "_";
 
-	public HashMap<DiffChunk, ArrayList<String>> extractFeatures(String code, ArrayList<DiffChunk> chunks, int withId) throws ParseException, IOException {
+	public HashMap<DiffChunk, ArrayList<String>> extractFeatures(HashMap<Path, ArrayList<DiffChunk>> map, int withId) throws ParseException, IOException {
 		String json = "";
-		for (int i = 0; i < chunks.size(); i++) {
-			CompilationUnit compilationUnit = parseFileWithRetries(code);
-			compilationUnit.setBegin(new Position(compilationUnit.getBegin().line - 1, compilationUnit.getBegin().column));
-			compilationUnit.setEnd(new Position(compilationUnit.getEnd().line + 1, compilationUnit.getEnd().column));
-			SubTreeVisitor visitor = new SubTreeVisitor(chunks.get(i));
-			Node subtree = visitor.getSubTree(compilationUnit);
-
-			if (subtree.getChildrenNodes().isEmpty()) {
-				continue;
+		for (Path path: map.keySet()) {
+			String code = null;
+			try {
+				code = new String(Files.readAllBytes(path));
+			} catch (IOException e) {
+				e.printStackTrace();
+				code = Common.EmptyString;
 			}
 
-			if (withId == 1) {
-				visitor.convertASTToJsonWithId(subtree);
-			} else {
-				visitor.convertASTToJsonWithoutId(subtree);
-			}
+			ArrayList<DiffChunk> chunks = map.get(path);
+			for (int i = 0; i < chunks.size(); i++) {
+				CompilationUnit compilationUnit = parseFileWithRetries(code);
+				compilationUnit.setBegin(new Position(compilationUnit.getBegin().line - 1, compilationUnit.getBegin().column));
+				compilationUnit.setEnd(new Position(compilationUnit.getEnd().line + 1, compilationUnit.getEnd().column));
+				SubTreeVisitor visitor = new SubTreeVisitor(chunks.get(i));
+				Node subtree = visitor.getSubTree(compilationUnit);
 
-			json += visitor.getJsonOfAst() + "/t/";
+				if (subtree.getChildrenNodes().isEmpty()) {
+					continue;
+				}
+
+				if (withId == 1) {
+					visitor.convertASTToJsonWithId(subtree);
+				} else {
+					visitor.convertASTToJsonWithoutId(subtree);
+				}
+
+				json += visitor.getJsonOfAst() + "/t/";
+			}
 		}
 		System.out.println(json);
 

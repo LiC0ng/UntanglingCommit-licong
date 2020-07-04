@@ -20,13 +20,11 @@ import JavaExtractor.FeaturesEntities.ProgramFeatures;
 
 public class ExtractFeaturesTask implements Callable<Void> {
 	CommandLineValues m_CommandLineValues;
-	Path filePath;
-	ArrayList<DiffChunk> chunks;
+	HashMap<Path, ArrayList<DiffChunk>> map;
 
-	public ExtractFeaturesTask(CommandLineValues commandLineValues, Path path, ArrayList<DiffChunk> chunks) {
+	public ExtractFeaturesTask(CommandLineValues commandLineValues, HashMap<Path, ArrayList<DiffChunk>> map) {
 		m_CommandLineValues = commandLineValues;
-		this.filePath = path;
-		this.chunks = chunks;
+		this.map = map;
 	}
 
 	@Override
@@ -45,25 +43,12 @@ public class ExtractFeaturesTask implements Callable<Void> {
 			e.printStackTrace();
 			return;
 		}
-
-		String chunksStr = mapToString(map);
-		if (chunksStr.length() > 0) {
-			String toPrint = this.filePath.toString() + " " + chunksStr;
-			System.out.println(toPrint);
-		}
 	}
 
 	public HashMap<DiffChunk, ArrayList<String>> extractSingleFile() throws ParseException, IOException {
-		String code = null;
-		try {
-			code = new String(Files.readAllBytes(this.filePath));
-		} catch (IOException e) {
-			e.printStackTrace();
-			code = Common.EmptyString;
-		}
 		FeatureExtractor featureExtractor = new FeatureExtractor();
 		HashMap<DiffChunk, ArrayList<String>> map;
-		map = featureExtractor.extractFeatures(code, this.chunks, m_CommandLineValues.WithId);
+		map = featureExtractor.extractFeatures(this.map, m_CommandLineValues.WithId);
 
 		return map;
 	}

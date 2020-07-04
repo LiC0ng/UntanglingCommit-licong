@@ -80,10 +80,8 @@ public class App {
 		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(s_CommandLineValues.NumThreads);
 		LinkedList<ExtractFeaturesTask> tasks = new LinkedList<>();
 
-		map.forEach((path, chunks) -> {
-			ExtractFeaturesTask task = new ExtractFeaturesTask(s_CommandLineValues, path, chunks);
-			tasks.add(task);
-		});
+		ExtractFeaturesTask task = new ExtractFeaturesTask(s_CommandLineValues, map);
+		tasks.add(task);
 
 		try {
 			executor.invokeAll(tasks);
