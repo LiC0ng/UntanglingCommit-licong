@@ -25,4 +25,10 @@ for repo in $(ls dataset/pre); do
   ${PYTHON} dataset_handle/parse_git_diff.py --repo ${SOURCE_DATASET} \
     --commit_file ${COMMIT_CSV} --range_dir ${RANGE_DIR}
 
+  echo "Extracting ${repo} tokens"
+  ${PYTHON} JavaExtractor/extract.py --repo ${SOURCE_DATASET} \
+    --commit_file ${COMMIT_CSV} --range_dir ${RANGE_DIR} --feature_dir0 ${FEATURE_WITHOUT_ID_DIR} \
+    --max_path_length 8 --max_path_width 2 --num_threads 64 \
+    --feature_dir1 ${FEATURE_WITH_ID_DIR} --jar ${EXTRACTOR_JAR}
+
 done
