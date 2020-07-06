@@ -4,6 +4,13 @@
 PYTHON='python3'
 EXTRACTOR_JAR=JavaExtractor/JPredict/target/JavaExtractor-0.0.1-SNAPSHOT.jar
 ###########################################################
+FEATURE=dataset/features
+TOTAL_FEATURES_WITH_ID=${FEATURE}/features1
+TOTAL_FEATURES_WITHOUT_ID=${FEATURE}/features2
+
+mkdir -p ${FEATURE}
+mkdir -p ${TOTAL_FEATURES_WITH_ID}
+mkdir -p ${TOTAL_FEATURES_WITHOUT_ID}
 
 for repo in $(ls dataset/pre); do
   SOURCE_DATASET=dataset/repositories/zeller-${repo}
@@ -44,5 +51,10 @@ for repo in $(ls dataset/pre); do
   ${PYTHON} dataset_handle/dataset_index.py --commit_file ${COMMIT_CSV} \
   --feature_dir0 ${FEATURE_WITHOUT_ID_DIR}  --index_dir ${INDEX_DIR} \
   --tangled_file ${TANGLED_CSV}
+
+  echo "Concating ${repo} index and features"
+  cp -r ${FEATURE_WITH_ID_DIR}/* ${TOTAL_FEATURES_WITH_ID}
+  cp -r ${FEATURE_WITHOUT_ID_DIR}/* ${TOTAL_FEATURES_WITHOUT_ID}
+  # TODO: automatic concating index
 
 done
