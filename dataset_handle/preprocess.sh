@@ -30,5 +30,12 @@ for repo in $(ls dataset/pre); do
     --commit_file ${COMMIT_CSV} --range_dir ${RANGE_DIR} --feature_dir0 ${FEATURE_WITHOUT_ID_DIR} \
     --max_path_length 8 --max_path_width 2 --num_threads 64 \
     --feature_dir1 ${FEATURE_WITH_ID_DIR} --jar ${EXTRACTOR_JAR}
+  
+  echo "Seperating ${repo} features"
+  ${PYTHON} dataset_handle/seperate_features.py --commit_file ${COMMIT_CSV} \
+    --feature_dir ${FEATURE_WITH_ID_DIR}
+
+  ${PYTHON} dataset_handle/seperate_features.py --commit_file ${COMMIT_CSV} \
+  --feature_dir ${FEATURE_WITHOUT_ID_DIR}
 
 done
