@@ -58,3 +58,6 @@ for repo in $(ls dataset/pre); do
   # TODO: automatic concating index
 
 done
+
+echo "Seperating dataset"
+${PYTHON} dataset_handle/seperate_dataset.py
