@@ -7,13 +7,15 @@ EXTRACTOR_JAR=JavaExtractor/JPredict/target/JavaExtractor-0.0.1-SNAPSHOT.jar
 FEATURE=dataset/features
 TOTAL_FEATURES_WITH_ID=${FEATURE}/features1
 TOTAL_FEATURES_WITHOUT_ID=${FEATURE}/features2
-DATA_DIR = dataset/dataset
-DICT_DIR = dataset/dict
+DATA_DIR=dataset/dataset
+DATA_INDEX_DIR=dataset/index
+DICT_DIR=dataset/dict
 
 mkdir -p ${FEATURE}
 mkdir -p ${TOTAL_FEATURES_WITH_ID}
 mkdir -p ${TOTAL_FEATURES_WITHOUT_ID}
 mkdir -p ${DATA_DIR}
+mkdir -p ${DATA_INDEX_DIR}
 mkdir -p ${DICT_DIR}
 
 for repo in $(ls dataset/pre); do
@@ -59,7 +61,8 @@ for repo in $(ls dataset/pre); do
   echo "Concating ${repo} index and features"
   cp -r ${FEATURE_WITH_ID_DIR}/* ${TOTAL_FEATURES_WITH_ID}
   cp -r ${FEATURE_WITHOUT_ID_DIR}/* ${TOTAL_FEATURES_WITHOUT_ID}
-  # TODO: automatic concating index mkdir dataset/index
+  ${PYTHON} dataset_handle/concat_dataset.py --source_dir ${INDEX_DIR} \
+    --dest_dir ${DATA_INDEX_DIR}
 
 done
 
