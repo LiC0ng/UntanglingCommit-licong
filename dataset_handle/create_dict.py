@@ -1,7 +1,8 @@
 import os
+from argparse import ArgumentParser
 
 
-def create_dict_with_id(feature_path):
+def create_dict_with_id(feature_path, dict_path):
     dictt = set()
     files_list = os.listdir(feature_path)
     for file in files_list:
@@ -14,13 +15,13 @@ def create_dict_with_id(feature_path):
             dictt.add(word)
         feature_file.close()
 
-    dict_file = open('dataset/dict/withid.txt', 'w')
+    dict_file = open(dict_path + '/nodetoken.txt', 'w')
     for word in dictt:
         dict_file.write(word + " ")
     dict_file.close()
 
 
-def create_dict_without_id(feature_path):
+def create_dict_without_id(feature_path, dict_path):
     dictt = set()
     files_list = os.listdir(feature_path)
     for file in files_list:
@@ -33,14 +34,19 @@ def create_dict_without_id(feature_path):
             dictt.add(word)
         feature_file.close()
 
-    dict_file = open('dataset/dict/noid.txt', 'w')
+    dict_file = open(dict_path + '/nodetype.txt', 'w')
     for word in dictt:
         dict_file.write(word + " ")
     dict_file.close()
 
 
 if __name__ == '__main__':
-    feature_path = 'dataset/features/features1'
-    create_dict_with_id(feature_path)
-    feature_path = 'dataset/features/features2'
-    create_dict_without_id(feature_path)
+    parser = ArgumentParser()
+    parser.add_argument("--feature_dir", dest="feature_dir", required=True)
+    parser.add_argument("--dict_dir", dest="dict_dir", required=True)
+    args = parser.parse_args()
+    dict_path = args.dict_dir
+    feature_path = args.feature_dir + '/features1'
+    create_dict_with_id(feature_path, dict_path)
+    feature_path = args.feature_dir + '/features2'
+    create_dict_without_id(feature_path, dict_path)

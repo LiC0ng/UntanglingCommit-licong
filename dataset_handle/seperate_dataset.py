@@ -1,9 +1,10 @@
 import random
+from argparse import ArgumentParser
 
 
-def ReadFileDatas():
+def ReadFileDatas(index_path):
     FileNamelist = []
-    file = open('dataset/index/dataset.txt', 'r')
+    file = open(index_path + '/dataset.txt', 'r')
     for line in file:
         FileNamelist.append(line)
     print('len ( FileNamelist ) = ', len(FileNamelist))
@@ -11,10 +12,10 @@ def ReadFileDatas():
     return FileNamelist
 
 
-def WriteDatasToFile(listInfo):
-    train_data = open('dataset/dataset/traindata.txt', mode='w')
-    dev_data = open('dataset/dataset/devdata.txt', mode='w')
-    test_data = open('dataset/dataset/testdata.txt', mode='w')
+def WriteDatasToFile(listInfo, data_path):
+    train_data = open(data_path + '/traindata.txt', mode='w')
+    dev_data = open(data_path + '/devdata.txt', mode='w')
+    test_data = open(data_path + '/testdata.txt', mode='w')
     for idx in range(len(listInfo)):
         if idx < (len(listInfo) * 8 / 10):
             train_data.write(listInfo[idx])
@@ -28,7 +29,11 @@ def WriteDatasToFile(listInfo):
 
 
 if __name__ == "__main__":
-    listFileInfo = ReadFileDatas()
+    parser = ArgumentParser()
+    parser.add_argument("--index_dir", dest="index_dir", required=True)
+    parser.add_argument("--data_dir", dest="data_dir", required=True)
+    args = parser.parse_args()
+    listFileInfo = ReadFileDatas(args.index_dir)
     # shuffle dataset
     random.shuffle(listFileInfo)
-    WriteDatasToFile(listFileInfo)
+    WriteDatasToFile(listFileInfo, args.data_dir)
