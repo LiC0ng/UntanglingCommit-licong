@@ -124,9 +124,9 @@ def train_model(embeddings):
         print(threaholder)
         p = precision_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
         r = recall_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
-        print("recall_test:" + str(r))
-        print("precision_test:" + str(p))
-        print("f1score_test:" + str(maxf1value))
+        print("recall_valid:" + str(r))
+        print("precision_valid:" + str(p))
+        print("f1score_valid:" + str(maxf1value))
         ff.close()
     # start test
     print("\nstarttest:" + name)
