@@ -18,7 +18,7 @@ def WriteDatasToFile(listInfo, data_path, repo):
     train_data = open(data_path + '/traindata.txt', mode='a')
     dev_data = open(data_path + '/devdata.txt', mode='a')
     test_data = open(data_path + '/totaltest.txt', mode='a')
-    fixed_data = open(data_path + '/' + repo + '_test.txt', mode='w')
+    fixed_data = open(data_path + '/' + repo + '_test.txt', mode='a')
     for idx in range(len(listInfo)):
         if idx <= (len(listInfo) * 8 / 10):
             train_data.write(listInfo[idx])
