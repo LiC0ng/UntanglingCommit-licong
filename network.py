@@ -59,7 +59,7 @@ def conv_layer(num_conv, output_size, nodes1, children1, nodes2, children2, feat
             nodes22
             for _ in range(num_conv)
         ]
-        return tf.concat(nodes1, axis=2),tf.concat(nodes2, axis=2)
+        return tf.concat(nodes1, axis=2), tf.concat(nodes2, axis=2)
 
 
 def conv_node(nodes1, children1, nodes2, children2, feature_size, output_size):
@@ -71,7 +71,7 @@ def conv_node(nodes1, children1, nodes2, children2, feature_size, output_size):
             tf.Variable(tf.truncated_normal([feature_size, output_size], stddev=std), name='Wl'),
             tf.Variable(tf.truncated_normal([feature_size, output_size], stddev=std), name='Wr'),
         )
-        init = tf.truncated_normal([output_size, ], stddev=math.sqrt(2.0/feature_size))
+        init = tf.truncated_normal([output_size, ], stddev=math.sqrt(2.0 / feature_size))
         # init = tf.zeros([output_size,])
         b_conv = tf.Variable(init, name='b_conv')
         return conv_step(nodes1, children1, feature_size, w_t, w_r, w_l, b_conv), conv_step(nodes2, children2, feature_size, w_t, w_r, w_l, b_conv)
@@ -289,7 +289,7 @@ def loss_layer(logits_node):
 
     labels = tf.placeholder(tf.float32, (1,))
     with tf.name_scope('loss_layer'):
-        loss = tf.square(logits_node[0]-labels[0])
+        loss = tf.square(logits_node[0] - labels[0])
         return labels, loss
 
 

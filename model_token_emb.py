@@ -132,7 +132,7 @@ def train_model(embeddings):
             if f1score > maxf1value:
                 maxf1value = f1score
                 maxstep = i
-        threaholder = -0.7+maxstep*0.1
+        threaholder = -0.7 + maxstep * 0.1
         print("threaholder:")
         print(threaholder)
         p = precision_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
@@ -141,15 +141,14 @@ def train_model(embeddings):
         print("precision_valid:" + str(p))
         print("f1score_valid:" + str(maxf1value))
         ff.close()
-    print("\nstarttest:")
     test_list = ['argouml_test', 'gwt_test', 'jaxen_test', 'jruby_test', 'xstream_test', 'totaltest']
     for name in test_list:
+        print("\nstarttest:" + name)
         correct_labels_test = []
         predictions_test = []
         ff = open("dataset/dataset/" + name + '.txt', 'r')
         line = "123"
         k = 0
-        print("starttest:")
         while line:
             line = ff.readline().rstrip('\n')
             l = line.split('\t')
@@ -171,7 +170,7 @@ def train_model(embeddings):
                               )
             k += 1
             correct_labels_test.append(int(batch_labels[0]))
-            threaholderr = -0.7+maxstep*0.1
+            threaholderr = -0.7 + maxstep * 0.1
             if output[0] >= threaholderr:
                 predictions_test.append(1)
             else:
