@@ -15,12 +15,20 @@ def train_model(embeddings):
     nodes_node1, children_node1, nodes_node2, children_node2, res = network.init_net_finetune(num_feats, embeddingg)
     aaa = 1
     labels_node, loss_node = network.loss_layer(res)
+    tf.summary.scalar('loss', loss_node)
     optimizer = tf.train.GradientDescentOptimizer(LEARN_RATE)
     train_step = optimizer.minimize(loss_node)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)  # config=tf.ConfigProto(device_count={'GPU':0}))
     sess.run(tf.global_variables_initializer())
+
+    with tf.name_scope('saver'):
+        saver = tf.train.Saver()
+        summaries = tf.summary.merge_all()
+        writer = tf.summary.FileWriter('logs', sess.graph)
+    checkfile = os.path.join('logs', 'cnn_tree.ckpt')
+
     dictt = {}
     listrec = []
     file_list = os.listdir('dataset/features/features2')
@@ -61,8 +69,8 @@ def train_model(embeddings):
             if (l[0] in listrec) or (l[1] in listrec):
                 continue
             nodes11, children1, nodes22, children2, batch_labels = getData_notokenfinetune(l, dictt, embeddings)
-            _, err, r = sess.run(
-                [train_step, loss_node, res],
+            _, summary, err, r = sess.run(
+                [train_step, summaries, loss_node, res],
                 feed_dict={
                     nodes_node1: nodes11,
                     children_node1: children1,
@@ -77,6 +85,7 @@ def train_model(embeddings):
                       'Loss:', err,
                       'R:', r,
                       )
+                writer.add_summary(summary, aaa)
             aaa += 1
         # Validation Step
         print("\nstart validation:")
@@ -128,6 +137,7 @@ def train_model(embeddings):
         print("precision_valid:" + str(p))
         print("f1score_valid:" + str(maxf1value))
         ff.close()
+    saver.save(sess, os.path.join(checkfile), aaa)
     # start test
     test_list = ['argouml_test', 'gwt_test', 'jaxen_test', 'jruby_test', 'xstream_test', 'totaltest']
     for name in test_list:

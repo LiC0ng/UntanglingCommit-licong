@@ -1,6 +1,6 @@
 """Build a CNN network that learns a convolution over a tree structure as
 described in Lili Mou et al. (2015) https://arxiv.org/pdf/1409.5718.pdf
-Modified on Hao Yu's code published on https://github.com/yh1105/datasetforTBCCD"""
+Modified on Lili Mou's code published on https://github.com/crestonbunch/tbcnn"""
 
 import math
 import tensorflow as tf
@@ -18,12 +18,26 @@ def init_net_finetune(feature_size, embeddingg):
         nodes2 = tf.nn.embedding_lookup(embeddingg, nodes22)
         nodes1 = tf.expand_dims(nodes1, 0)
         nodes2 = tf.expand_dims(nodes2, 0)
+
     with tf.name_scope('network'):
         conv1, conv2 = conv_layer(1, 600, nodes1, children1, nodes2, children2, feature_size)
         pooling1 = pooling_layer(conv1)
         pooling2 = pooling_layer(conv2)
         h1, h2 = hidden_layer(pooling1, pooling2, 600, 50)
         res = computCos(h1, h2)
+
+    with tf.name_scope('summaries'):
+        tf.summary.scalar('tree_size1', tf.shape(nodes1)[1])
+        tf.summary.scalar('child_size1', tf.shape(children1)[2])
+        tf.summary.scalar('tree_size2', tf.shape(nodes2)[1])
+        tf.summary.scalar('child_size2', tf.shape(children2)[2])
+        tf.summary.histogram('logits1', h1)
+        tf.summary.histogram('logits2', h2)
+        tf.summary.image('inputs1', tf.expand_dims(nodes1, axis=3))
+        tf.summary.image('inputs1', tf.expand_dims(nodes2, axis=3))
+        tf.summary.image('conv1', tf.expand_dims(conv1, axis=3))
+        #tf.summary.image('conv2', tf.expand_dims(conv2, axis=3))
+
     return nodes11, children1, nodes22, children2, res
 
 
@@ -74,6 +88,13 @@ def conv_node(nodes1, children1, nodes2, children2, feature_size, output_size):
         init = tf.truncated_normal([output_size, ], stddev=math.sqrt(2.0 / feature_size))
         # init = tf.zeros([output_size,])
         b_conv = tf.Variable(init, name='b_conv')
+
+        with tf.name_scope('summaries'):
+            tf.summary.histogram('w_t', [w_t])
+            tf.summary.histogram('w_l', [w_l])
+            tf.summary.histogram('w_r', [w_r])
+            tf.summary.histogram('b_conv', [b_conv])
+
         return conv_step(nodes1, children1, feature_size, w_t, w_r, w_l, b_conv), conv_step(nodes2, children2, feature_size, w_t, w_r, w_l, b_conv)
 
 
@@ -278,9 +299,14 @@ def hidden_layer(pooled1, pooled2, input_size, output_size):
             name='weights'
         )
 
-        init = tf.truncated_normal([output_size, ], stddev=math.sqrt(2.0/input_size))
+        init = tf.truncated_normal([output_size, ], stddev=math.sqrt(2.0 / input_size))
         # init = tf.zeros([output_size,])
         biases = tf.Variable(init, name='biases')
+
+        with tf.name_scope('summaries'):
+            tf.summary.histogram('weights', [weights])
+            tf.summary.histogram('biases', [biases])
+
         return tf.nn.tanh(tf.matmul(pooled1, weights) + biases), tf.nn.tanh(tf.matmul(pooled2, weights) + biases)
 
 
