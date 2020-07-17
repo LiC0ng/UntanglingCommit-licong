@@ -15,7 +15,7 @@ def create_dict_with_id(feature_path, dict_path):
             dictt.add(word)
         feature_file.close()
 
-    dict_file = open(dict_path + '/nodetoken.txt', 'w')
+    dict_file = open(dict_path + '/withid.txt', 'w')
     for word in dictt:
         dict_file.write(word + " ")
     dict_file.close()
