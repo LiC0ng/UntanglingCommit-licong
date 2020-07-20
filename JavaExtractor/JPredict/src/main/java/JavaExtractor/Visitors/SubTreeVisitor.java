@@ -46,6 +46,10 @@ public class SubTreeVisitor extends TreeVisitor {
     public void getNameWithoutId(Node node) {
         if (node instanceof NameExpr) {
             jsonOfAst.append("\"").append("NameExpr_").append(((NameExpr) node).getName()).append("\", ");
+        } else if (node instanceof ClassOrInterfaceType) {
+            jsonOfAst.append("\"").append("NameExpr_").append(((ClassOrInterfaceType) node).getName()).append("\", ");
+        } else if (node instanceof VariableDeclaratorId) {
+            jsonOfAst.append("\"").append("NameExpr_").append(((VariableDeclaratorId) node).getName()).append("\", ");
         } else {
             jsonOfAst.append("\"").append(node.getClass().getSimpleName()).append("\", ");
         }
@@ -119,7 +123,7 @@ public class SubTreeVisitor extends TreeVisitor {
         }
         for (int i = 0; i < node.getChildrenNodes().size(); i++) {
             childrenNode = node.getChildrenNodes().get(i);
-            if (chunk.containsPosition(node.getBegin(), node.getEnd(),childrenNode.getBegin(), childrenNode.getEnd())) {
+            if (chunk.containsPosition(node.getBegin(), node.getEnd(), childrenNode.getBegin(), childrenNode.getEnd())) {
                 childrenNode.setParentNode(null);
                 rootNode = childrenNode;
                 getSubTree(rootNode);
