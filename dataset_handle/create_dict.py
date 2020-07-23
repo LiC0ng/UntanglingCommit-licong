@@ -22,20 +22,29 @@ def create_dict_with_id(feature_path, dict_path):
 
 
 def create_dict_without_id(feature_path, dict_path):
-    dictt = set()
+    dictt1 = set()
+    dictt2 = set()
     files_list = os.listdir(feature_path)
     for file in files_list:
         feature_file = open(feature_path + '/' + file, 'r')
         feature = feature_file.read()
         words = feature.split('"')
         for word in words:
-            if word.find('NameExpr_') >= 0 or word.find('[') >= 0 or word.find(':') >= 0 or word.find('{') >= 0 or word.find(',') >= 0:
+            if word.find('[') >= 0 or word.find(':') >= 0 or word.find('{') >= 0 or word.find(',') >= 0:
                 continue
-            dictt.add(word)
+            if word.find('NameExpr_') >= 0:
+                dictt2.add(word)
+            else:
+                dictt1.add(word)
         feature_file.close()
 
     dict_file = open(dict_path + '/nodetype.txt', 'w')
-    for word in dictt:
+    for word in dictt1:
+        dict_file.write(word + " ")
+    dict_file.close()
+
+    dict_file = open(dict_path + '/onlyid.txt', 'w')
+    for word in dictt2:
         dict_file.write(word + " ")
     dict_file.close()
 
