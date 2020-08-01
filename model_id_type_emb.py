@@ -5,8 +5,8 @@ import tensorflow as tf
 import numpy as np
 import network
 from sampleJava import getData_id_type
-from parameters import EPOCHS, LEARN_RATE
-from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
+from argparse import ArgumentParser
 
 
 def getWordEmd(word):
@@ -20,13 +20,15 @@ def getWordEmd(word):
 
 def train_model(embeddings):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    num_feats = 63
-    nodes_node1, children_node1, nodes_node2, children_node2, res = network.init_net_finetune(num_feats, embeddingg)
-    aaa = 1
+    nodes_node1, children_node1, nodes_node2, children_node2, res = network.init_net_finetune(feature_size, embeddingg, KERNAL_NUM)
     labels_node, loss_node = network.loss_layer(res)
-    tf.summary.scalar('loss', loss_node)
+
+    aaa = 0
+    global_step = tf.Variable(0, trainable=False)
+    LEARN_RATE = tf.train.exponential_decay(0.005, global_step, 60424, 0.9, True)
     optimizer = tf.train.GradientDescentOptimizer(LEARN_RATE)
-    train_step = optimizer.minimize(loss_node)
+    train_step = optimizer.minimize(loss_node, global_step=global_step)
+
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)  # config=tf.ConfigProto(device_count={'GPU':0}))
@@ -48,8 +50,8 @@ def train_model(embeddings):
             listrec.append(file)
             continue
         dictt[file] = sample
-    print("length of dictt: " + str(len(dictt)))
-    print("invalid file number:", z)
+    # print("length of dictt: " + str(len(dictt)))
+    # print("invalid file number:", z)
 
     TrainDatalist = []
     file = open("dataset/dataset/traindata.txt", 'r')
@@ -57,10 +59,10 @@ def train_model(embeddings):
         if line == "" or line == " ":
             continue
         TrainDatalist.append(line)
-    print('len ( TrainData ) = ', len(TrainDatalist))
+    # print('len ( TrainData ) = ', len(TrainDatalist))
     file.close()
 
-    for epoch in range(1, EPOCHS + 1):
+    for global_step in range(1, EPOCHS + 1):
         k = 0
         random.shuffle(TrainDatalist)
         for line in TrainDatalist:
@@ -82,109 +84,113 @@ def train_model(embeddings):
                     labels_node: batch_labels,
                 }
             )
-            if aaa % 1000 == 0:
-                print('Epoch:', epoch,
-                      'Step:', aaa,
-                      'Loss:', err,
-                      'R:', r,
-                      )
-                print(sess.run(tf.nn.embedding_lookup(embeddingg, [68,69,70])))
+            # if aaa % 1000 == 0:
+            #     print('Epoch:', epoch,
+            #           'Step:', aaa,
+            #           'Loss:', err,
+            #           'R:', r,
+            #           )
+            learn_rate_var = sess.run(LEARN_RATE)
             aaa += 1
         # Validation Step
-        print("\nstart validation:")
-        correct_labels_dev = []
-        predictions_dev = []
-        for i in range(0, 15):
-            predictions_dev.append([])
-        ff = open("dataset/dataset/devdata.txt", 'r')
-        line = "123"
-        k = 0
-        maxf1value = -1.0
-        while line:
-            line = ff.readline().rstrip('\n')
-            l = line.split('\t')
-            if len(l) != 3:
-                break
-            k += 1
-            label = l[2]
-            if (l[0] in listrec) or (l[1] in listrec):
-                continue
-            nodes11, children1, nodes22, children2, _ = getData_id_type(l, dictt, embeddings)
-            output = sess.run([res],
-                              feed_dict={
-                                  nodes_node1: nodes11,
-                                  children_node1: children1,
-                                  nodes_node2: nodes22,
-                                  children_node2: children2,
-                              }
-                              )
-            correct_labels_dev.append(int(label))
-            threaholder = -0.7
+        # print("\nstart validation:")
+        if global_step % 5 == 0:
+            correct_labels_dev = []
+            predictions_dev = []
             for i in range(0, 15):
-                if output[0] >= threaholder:
-                    predictions_dev[i].append(1)
-                else:
-                    predictions_dev[i].append(-1)
-                threaholder += 0.1
-        for i in range(0, 15):
-            f1score = f1_score(correct_labels_dev, predictions_dev[i], average='binary')
-            if f1score > maxf1value:
-                maxf1value = f1score
-                maxstep = i
-        threaholder = -0.7 + maxstep * 0.1
-        print("threaholder:")
-        print(threaholder)
-        p = precision_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
-        r = recall_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
-        print("recall_valid:" + str(r))
-        print("precision_valid:" + str(p))
-        print("f1score_valid:" + str(maxf1value))
-        ff.close()
-    # start test
-    test_list = ['argouml_test', 'gwt_test', 'jaxen_test', 'jruby_test', 'xstream_test', 'totaltest']
-    for name in test_list:
-        print("\nstarttest:" + name)
-        correct_labels_test = []
-        predictions_test = []
-        ff = open("dataset/dataset/" + name + '.txt', 'r')
-        line = "123"
-        k = 0
-        while line:
-            line = ff.readline().rstrip('\n')
-            l = line.split('\t')
-            if len(l) != 3:
-                break
-            k += 1
-            label = l[2]
-            if (l[0] in listrec) or (l[1] in listrec):
-                continue
-            nodes11, children1, nodes22, children2, _ = getData_id_type(l, dictt, embeddings)
-            output = sess.run([res],
-                              feed_dict={
-                                  nodes_node1: nodes11,
-                                  children_node1: children1,
-                                  nodes_node2: nodes22,
-                                  children_node2: children2,
-                              }
-                              )
-            correct_labels_test.append(int(label))
+                predictions_dev.append([])
+            ff = open("dataset/dataset/devdata.txt", 'r')
+            line = "123"
+            k = 0
+            maxaccuracy = -1.0
+            while line:
+                line = ff.readline().rstrip('\n')
+                l = line.split('\t')
+                if len(l) != 3:
+                    break
+                k += 1
+                label = l[2]
+                if (l[0] in listrec) or (l[1] in listrec):
+                    continue
+                nodes11, children1, nodes22, children2, _ = getData_id_type(l, dictt, embeddings)
+                output = sess.run([res],
+                                feed_dict={
+                                    nodes_node1: nodes11,
+                                    children_node1: children1,
+                                    nodes_node2: nodes22,
+                                    children_node2: children2,
+                                }
+                                )
+                correct_labels_dev.append(int(label))
+                threaholder = -0.7
+                for i in range(0, 15):
+                    if output[0] >= threaholder:
+                        predictions_dev[i].append(1)
+                    else:
+                        predictions_dev[i].append(-1)
+                    threaholder += 0.1
+            for i in range(0, 15):
+                accuracy = accuracy_score(correct_labels_dev, predictions_dev[i])
+                if accuracy > maxaccuracy:
+                    maxaccuracy = accuracy
+                    maxstep = i
             threaholder = -0.7 + maxstep * 0.1
-            if output[0] >= threaholder:
-                predictions_test.append(1)
-            else:
-                predictions_test.append(-1)
-        print("threaholder:")
-        print(threaholder)
-        cm = confusion_matrix(correct_labels_test, predictions_test)
-        tn, fp, fn, tp = cm.ravel()
-        p = precision_score(correct_labels_test, predictions_test, average='binary')
-        r = recall_score(correct_labels_test, predictions_test, average='binary')
-        f1score = f1_score(correct_labels_test, predictions_test, average='binary')
-        print("recall_test:" + str(r))
-        print("precision_test:" + str(p))
-        print("f1score_test:" + str(f1score))
-        print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
-        ff.close()
+            # print("threaholder:")
+            # print(threaholder)
+            # p = precision_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
+            # r = recall_score(correct_labels_dev, predictions_dev[maxstep], average='binary')
+            # print("recall_valid:" + str(r))
+            # print("precision_valid:" + str(p))
+            # print("f1score_valid:" + str(maxf1value))
+            ff.close()
+        # start test
+            test_list = ['totaltest']
+            for name in test_list:
+                # print("\nstarttest:" + name)
+                correct_labels_test = []
+                predictions_test = []
+                ff = open("dataset/dataset/" + name + '.txt', 'r')
+                line = "123"
+                k = 0
+                while line:
+                    line = ff.readline().rstrip('\n')
+                    l = line.split('\t')
+                    if len(l) != 3:
+                        break
+                    k += 1
+                    label = l[2]
+                    if (l[0] in listrec) or (l[1] in listrec):
+                        continue
+                    nodes11, children1, nodes22, children2, _ = getData_id_type(l, dictt, embeddings)
+                    output = sess.run([res],
+                                    feed_dict={
+                                        nodes_node1: nodes11,
+                                        children_node1: children1,
+                                        nodes_node2: nodes22,
+                                        children_node2: children2,
+                                    }
+                                    )
+                    correct_labels_test.append(int(label))
+                    threaholder = -0.7 + maxstep * 0.1
+                    if output[0] >= threaholder:
+                        predictions_test.append(1)
+                    else:
+                        predictions_test.append(-1)
+                    cm = confusion_matrix(correct_labels_test, predictions_test)
+                    tn, fp, fn, tp = cm.ravel()
+                    # p = precision_score(correct_labels_test, predictions_test, average='binary')
+                    # r = recall_score(correct_labels_test, predictions_test, average='binary')
+                    accuracy = accuracy_score(correct_labels_test, predictions_test)
+                    print("threaholder:")
+                    print(threaholder)
+                    print("combine precision_test:", tp / (tp + fp))
+                    print("combine recall_test:", tp / (tp + fn))
+                    print("seperate precision_test:", tn / (tn + fn))
+                    print("seperate recall_test:", tn / (tn + fp))
+                    print("accuracy_test:" + str(accuracy))
+                    print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
+                    print(learn_rate_var)
+                ff.close()
 
 
 if __name__ == '__main__':
@@ -192,6 +198,13 @@ if __name__ == '__main__':
     dictta = {}
     listta = list()
     listtb = list()
+
+    parser = ArgumentParser()
+    parser.add_argument("--kernal_num", dest="kernal_num", required=True)
+    args = parser.parse_args()
+
+    EPOCHS = 40
+    KERNAL_NUM = int(args.kernal_num)
 
     def _onehot(i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
@@ -212,7 +225,7 @@ if __name__ == '__main__':
                 'ArrayCreationLevel', 'FieldDeclaration', 'VariableDeclarationExpr', 'NullLiteralExpr', 'MemberValuePair',
                 'AssignExpr', 'LongLiteralExpr']
     for l in listtype:
-        listta.append(np.random.normal(0, 0.1, 63).astype(np.float32))
+        listta.append(np.random.normal(0, 0.1, feature_size).astype(np.float32))
     embeddingg1 = np.asarray(listta)
     embeddingg1 = tf.Variable(embeddingg1, dtype=tf.float32)
     for i in range(len(listtype)):

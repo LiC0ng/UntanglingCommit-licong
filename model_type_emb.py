@@ -26,6 +26,8 @@ def train_model(embeddings):
     file_list = os.listdir('dataset/features/features2')
     z = 0
     for file in file_list:
+
+        
         file_path = 'dataset/features/features2' + '/' + file
         if not os.path.exists(file_path):
             listrec.append(file)
