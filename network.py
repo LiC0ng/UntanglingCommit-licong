@@ -6,7 +6,7 @@ import math
 import tensorflow as tf
 
 
-def init_net_finetune(feature_size, embeddingg):
+def init_net_finetune(feature_size, embeddingg, kernal_num):
     """Initialize an empty network."""
 
     with tf.name_scope('inputs'):
@@ -20,28 +20,28 @@ def init_net_finetune(feature_size, embeddingg):
         nodes2 = tf.expand_dims(nodes2, 0)
 
     with tf.name_scope('network'):
-        conv1, conv2 = conv_layer(1, 600, nodes1, children1, nodes2, children2, feature_size)
+        conv1, conv2 = conv_layer(1, kernal_num, nodes1, children1, nodes2, children2, feature_size)
         pooling1 = pooling_layer(conv1)
         pooling2 = pooling_layer(conv2)
-        h1, h2 = hidden_layer(pooling1, pooling2, 600, 50)
+        h1, h2 = hidden_layer(pooling1, pooling2, kernal_num, 50)
         res = computCos(h1, h2)
 
-    with tf.name_scope('summaries'):
-        tf.summary.scalar('tree_size1', tf.shape(nodes1)[1])
-        tf.summary.scalar('child_size1', tf.shape(children1)[2])
-        tf.summary.scalar('tree_size2', tf.shape(nodes2)[1])
-        tf.summary.scalar('child_size2', tf.shape(children2)[2])
-        tf.summary.histogram('logits1', h1)
-        tf.summary.histogram('logits2', h2)
-        tf.summary.image('inputs1', tf.expand_dims(nodes1, axis=3))
-        tf.summary.image('inputs1', tf.expand_dims(nodes2, axis=3))
-        tf.summary.image('conv1', tf.expand_dims(conv1, axis=3))
-        #tf.summary.image('conv2', tf.expand_dims(conv2, axis=3))
+    # with tf.name_scope('summaries'):
+    #     tf.summary.scalar('tree_size1', tf.shape(nodes1)[1])
+    #     tf.summary.scalar('child_size1', tf.shape(children1)[2])
+    #     tf.summary.scalar('tree_size2', tf.shape(nodes2)[1])
+    #     tf.summary.scalar('child_size2', tf.shape(children2)[2])
+    #     tf.summary.histogram('logits1', h1)
+    #     tf.summary.histogram('logits2', h2)
+    #     tf.summary.image('inputs1', tf.expand_dims(nodes1, axis=3))
+    #     tf.summary.image('inputs1', tf.expand_dims(nodes2, axis=3))
+    #     tf.summary.image('conv1', tf.expand_dims(conv1, axis=3))
+    #     tf.summary.image('conv2', tf.expand_dims(conv2, axis=3))
 
     return nodes11, children1, nodes22, children2, res
 
 
-def init_net_nofinetune(feature_size):
+def init_net_nofinetune(feature_size, kernal_num):
     """Initialize an empty network."""
 
     with tf.name_scope('inputs'):
@@ -50,10 +50,10 @@ def init_net_nofinetune(feature_size):
         nodes2 = tf.placeholder(tf.float32, shape=(None, None, feature_size), name='tree')
         children2 = tf.placeholder(tf.int32, shape=(None, None, None), name='children')
     with tf.name_scope('network'):
-        conv1, conv2 = conv_layer(1, 600, nodes1, children1, nodes2, children2, feature_size)
+        conv1, conv2 = conv_layer(1, kernal_num, nodes1, children1, nodes2, children2, feature_size)
         pooling1 = pooling_layer(conv1)
         pooling2 = pooling_layer(conv2)
-        h1, h2 = hidden_layer(pooling1, pooling2, 600, 50)
+        h1, h2 = hidden_layer(pooling1, pooling2, kernal_num, 50)
         res = computCos(h1, h2)
     return nodes1, children1, nodes2, children2, res
 
