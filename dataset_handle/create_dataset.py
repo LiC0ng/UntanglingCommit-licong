@@ -1,36 +1,56 @@
 from argparse import ArgumentParser
-import random
 
 
-def ReadFileDatas(index_path):
+def ReadFileDatas(index_path, isCommit, isTrain):
     FileNamelist = []
     file = open(index_path, 'r')
     for line in file:
         if line == "" or line == " ":
             continue
-        FileNamelist.append(line)
-    print('len ( FileNamelist ) = ', len(FileNamelist))
+        if isCommit:
+            FileNamelist.append(line.strip('\n'))
+        else:
+            FileNamelist.append(line)
+    if isCommit and isTrain:
+        print('len ( Train Commit ) = ', len(FileNamelist))
+    elif isCommit and not isTrain:
+        print('len ( Test Commit ) = ', len(FileNamelist))
+    elif not isCommit:
+        print('len ( Data ) = ', len(FileNamelist))
     file.close()
     return FileNamelist
 
 
-def WriteDatasToFile(listInfo, data_path, repo):
+def WriteDatasToFile(data_path, repo):
     train_data = open(data_path + '/traindata.txt', mode='a')
-    dev_data = open(data_path + '/devdata.txt', mode='a')
-    test_data = open(data_path + '/totaltest.txt', mode='a')
-    fixed_data = open(data_path + '/' + repo + '_test.txt', mode='a')
-    for idx in range(len(listInfo)):
-        if idx <= (len(listInfo) * 8 / 10):
-            train_data.write(listInfo[idx])
-        elif idx > (len(listInfo) * 8 / 10) and idx <= (len(listInfo) * 9 / 10):
-            dev_data.write(listInfo[idx])
-        else:
-            test_data.write(listInfo[idx])
-            fixed_data.write(listInfo[idx])
+    for commit in trueTrainCommitList:
+        for data in untangled_list:
+            if(data.find(commit) >= 0):
+                train_data.writelines(data)
+
+    for commit in falseTrainCommitList:
+        for data in tangled_list:
+            commitPair = commit.split(" ")
+            if(data.find(commitPair[0]) >= 0 and data.find(commitPair[1]) >= 0):
+                train_data.writelines(data)
     train_data.close()
-    dev_data.close()
+
+    test_data = open(data_path + '/totaltest.txt', mode='a')
+    test_project_data = open(data_path + '/' + repo + '_test.txt', mode='a')
+    for commit in trueTestCommitList:
+        for data in untangled_list:
+            if(data.find(commit) >= 0):
+                test_data.writelines(data)
+                test_project_data.writelines(data)
+
+    for commit in falseTestCommitList:
+        for data in tangled_list:
+            commitPair = commit.split(" ")
+            if(data.find(commitPair[0]) >= 0 and data.find(commitPair[1]) >= 0):
+                test_data.writelines(data)
+                test_project_data.writelines(data)
     test_data.close()
-    fixed_data.close()
+    test_project_data.close()
 
 
 if __name__ == "__main__":
@@ -38,15 +58,14 @@ if __name__ == "__main__":
     parser.add_argument("--source_dir", dest="source_dir", required=True)
     parser.add_argument("--dest_dir", dest="dest_dir", required=True)
     parser.add_argument("--repo", dest="repo", required=True)
+    parser.add_argument("--commits_dir", dest="commits_dir", required=True)
     args = parser.parse_args()
+    trueTestCommitList = ReadFileDatas(args.commits_dir + '/test/true.csv', True, False)
+    falseTestCommitList = ReadFileDatas(args.commits_dir + '/test/false.csv', True, False)
+    trueTrainCommitList = ReadFileDatas(args.commits_dir + '/train/true.csv', True, True)
+    falseTrainCommitList = ReadFileDatas(args.commits_dir + '/train/false.csv', True, True)
 
-    tangled_list = ReadFileDatas(args.source_dir + '/tangled.txt')
-    random.shuffle(tangled_list)
-    untangled_list = ReadFileDatas(args.source_dir + '/untangled.txt')
-    random.shuffle(untangled_list)
-    max_len = len(tangled_list) if len(tangled_list) < len(untangled_list) else len(untangled_list)
-    tangled_list = tangled_list[0: max_len]
-    untangled_list = untangled_list[0: max_len]
+    tangled_list = ReadFileDatas(args.source_dir + '/tangled.txt', False, False)
+    untangled_list = ReadFileDatas(args.source_dir + '/untangled.txt', False, False)
 
-    WriteDatasToFile(tangled_list, args.dest_dir, args.repo)
-    WriteDatasToFile(untangled_list, args.dest_dir, args.repo)
+    WriteDatasToFile(args.dest_dir, args.repo)
