@@ -12,8 +12,8 @@ for repo in $(ls ${REPOS_DIR}); do
     TRAIN_DATA_DIR=${COMMIT_DIR}/train
     TEST_DATA_DIR=${COMMIT_DIR}/test
 
-    TEMP=`echo $(cat ${COMMIT_CSV} | wc -l)/10 | bc`
-    TANGLED_DATA_NUM=$(( ${TEMP} > 5 ? ${TEMP} : 5 ))
+    TEMP=`echo $(cat ${COMMIT_CSV} | wc -l)/15 | bc`
+    TANGLED_DATA_NUM=$(( ${TEMP} > 4 ? ${TEMP} : 4 ))
 
     mkdir -p ${TRAIN_DATA_DIR}
     mkdir -p ${TEST_DATA_DIR}
