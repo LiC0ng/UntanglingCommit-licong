@@ -52,7 +52,7 @@ public class FeatureExtractor {
 					visitor.convertASTToJsonWithoutId(subtree);
 				}
 
-				json += visitor.getJsonOfAst() + "/t/";
+				json += (path + "/f/" +visitor.getJsonOfAst() + "/t/");
 			}
 		}
 		System.out.println(json);
