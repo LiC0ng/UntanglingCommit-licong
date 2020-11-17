@@ -1,3 +1,7 @@
+"""
+Model4: Use PACE to embed identifier nodes, and an N2N way method is used to embed other types of nodes
+"""
+
 import os
 import json
 import random
@@ -7,9 +11,12 @@ import network
 from sampleJava import getData_id_type
 from sklearn.metrics import confusion_matrix, accuracy_score
 from argparse import ArgumentParser
+from parameters import LEARN_RATE, EPOCHS, KERNEL
 
 
 def getWordEmd(word):
+    """PACE: combination of weighted character one-hot embedding"""
+
     listrechar = np.array([0.0 for i in range(0, len(listchar))])
     tt = 1
     for lchar in word:
@@ -39,7 +46,7 @@ def train_model(embeddings):
     # print("invalid file number:", z)
 
     TrainDatalist = []
-    file = open("dataset/dataset/traindata.txt", 'r')
+    file = open("dataset/dataset/train/" + data_type + ".txt", 'r')
     for line in file:
         if line == "" or line == " ":
             continue
@@ -48,13 +55,13 @@ def train_model(embeddings):
     file.close()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    nodes_node1, children_node1, nodes_node2, children_node2, res = network.init_net_finetune(feature_size, embeddingg, KERNAL_NUM)
+    nodes_node1, children_node1, nodes_node2, children_node2, res = network.init_net_finetune(feature_size, embeddingg, KERNEL)
     labels_node, loss_node = network.loss_layer(res)
 
     aaa = 0
     global_step = tf.Variable(0, trainable=False)
-    LEARN_RATE = tf.train.exponential_decay(0.002, global_step, len(TrainDatalist), 0.8, True)
-    optimizer = tf.train.GradientDescentOptimizer(LEARN_RATE)
+    learn_rate = tf.train.exponential_decay(LEARN_RATE, global_step, len(TrainDatalist), 0.9, True)
+    optimizer = tf.train.GradientDescentOptimizer(learn_rate)
     train_step = optimizer.minimize(loss_node, global_step=global_step)
 
     config = tf.ConfigProto()
@@ -67,13 +74,13 @@ def train_model(embeddings):
         random.shuffle(TrainDatalist)
         for line in TrainDatalist:
             line = line.rstrip('\n')
-            l = line.split('\t')
-            if len(l) != 3:
+            train_data = line.split('\t')
+            if len(train_data) != 3:
                 continue
             k += 1
-            if (l[0] in listrec) or (l[1] in listrec):
+            if (train_data[0] in listrec) or (train_data[1] in listrec):
                 continue
-            nodes11, children1, nodes22, children2, batch_labels = getData_id_type(l, dictt, embeddings)
+            nodes11, children1, nodes22, children2, batch_labels = getData_id_type(train_data, dictt, embeddings)
             _, err, r = sess.run(
                 [train_step, loss_node, res],
                 feed_dict={
@@ -84,103 +91,72 @@ def train_model(embeddings):
                     labels_node: batch_labels,
                 }
             )
-            # if aaa % 1000 == 0:
-            #     print('Epoch:', epoch,
-            #           'Step:', aaa,
-            #           'Loss:', err,
-            #           'R:', r,
-            #           )
-            learn_rate_var = sess.run(LEARN_RATE)
+            learn_rate_var = sess.run(learn_rate)
             aaa += 1
 
-        # Validation Step
-        # print("\nstart validation:")
-        if global_step % 5 == 0:
-            test_list = ['argouml_test', 'gwt_test', 'jaxen_test', 'jruby_test', 'xstream_test', 'totaltest']
-            for name in test_list:
-                print('start: ' + name)
-                correct_labels_test = []
-                predictions_test = []
-                for reci in range(0, 15):
-                    predictions_test.append([])
-                ff = open("dataset/dataset/" + name + ".txt", 'r')
-                line = "123"
-                k = 0
-                while line:
-                    line = ff.readline().rstrip('\n')
-                    l = line.split('\t')
-                    if len(l) != 3:
-                        break
-                    if (l[0] in listrec) or (l[1] in listrec):
-                        continue
-                    nodes11, children1, nodes22, children2, _ = getData_id_type(l, dictt, embeddings)
-                    label = l[2]
-                    k += 1
-                    output = sess.run([res],
-                                    feed_dict={
-                                        nodes_node1: nodes11,
-                                        children_node1: children1,
-                                        nodes_node2: nodes22,
-                                        children_node2: children2,
-                                    }
-                                    )
-                    correct_labels_test.append(int(label))
-                    threaholder = -0.5
-                    for i in range(0, 15):
-                        if output[0] >= threaholder:
-                            predictions_test[i].append(1)
-                        else:
-                            predictions_test[i].append(-1)
-                        threaholder += 0.1
-                maxstep = 0
-                maxaccuracy = 0
-                for i in range(0, 15):
-                    accuracy = accuracy_score(correct_labels_test, predictions_test[i])
-                    if accuracy > maxaccuracy:
-                        maxaccuracy = accuracy
-                        maxstep = i
-                threaholder = -0.5 + maxstep * 0.1
-                cm = confusion_matrix(correct_labels_test, predictions_test[maxstep])
-                tn, fp, fn, tp = cm.ravel()
-                # p = precision_score(correct_labels_test, predictions_test, average='binary')
-                # r = recall_score(correct_labels_test, predictions_test, average='binary')
-                accuracy = accuracy_score(correct_labels_test, predictions_test[maxstep])
-                print(global_step)
-                print("threaholder:")
-                print(threaholder)
-                print("max combine precision_test:", tp / (tp + fp))
-                print("max combine recall_test:", tp / (tp + fn))
-                print("max seperate precision_test:", tn / (tn + fn))
-                print("max seperate recall_test:", tn / (tn + fp))
-                print("max accuracy_test:" + str(accuracy))
-                print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
-                print('current learn rate:' + learn_rate_var)
-                ff.close()
+    test_list = ['argouml', 'gwt', 'jruby', 'xstream', 'all']
+    for name in test_list:
+        print('start test: ' + name)
+        correct_labels_test = []
+        predictions_test = []
+        for _ in range(0, 20):
+            predictions_test.append([])
 
-            # cluster_list = ['argouml', 'gwt', 'jaxen', 'jruby', 'xstream']
-            # for name in cluster_list:
-            #     print("\nstart cluster:" + name)
-            #     composite_commit_list = os.listdir('dataset/dataset/cluster/' + name)
-            #     for composite_commit in composite_commit_list:
-            #         fin = open('dataset/dataset/cluster/' + name + '/' + composite_commit, 'r')
-            #         fout = open("dataset/cluster/4/" + name + "/" + composite_commit, 'w')
-            #         for line in fin:
-            #             if line == "" or line == " ":
-            #                 continue
-            #             data = line.rstrip('\n')
-            #             pair_info = data.split('\t')
-            #             nodes11, children1, nodes22, children2, _ = getData_id_type(pair_info, dictt, embeddings)
-            #             output = sess.run([res],
-            #                             feed_dict={
-            #                                     nodes_node1: nodes11,
-            #                                     children_node1: children1,
-            #                                     nodes_node2: nodes22,
-            #                                     children_node2: children2,
-            #                             }
-            #                             )
-            #             fout.writelines(pair_info[2] + '\t' + pair_info[0] + '\t' + pair_info[1] + '\t' + str(output[0]) + '\n')
-            #         fout.close()
-            #         fin.close()
+        ff = open("dataset/dataset/test/" + name + "/" + data_type + ".txt", 'r')
+        line = "123"
+        k = 0
+        while line:
+            line = ff.readline().rstrip('\n')
+            test_data = line.split('\t')
+            if len(test_data) != 3:
+                continue
+            if (test_data[0] in listrec) or (test_data[1] in listrec):
+                continue
+            nodes11, children1, nodes22, children2, _ = getData_id_type(test_data, dictt, embeddings)
+            label = test_data[2]
+            k += 1
+            output = sess.run([res],
+                            feed_dict={
+                                nodes_node1: nodes11,
+                                children_node1: children1,
+                                nodes_node2: nodes22,
+                                children_node2: children2,
+                            }
+                            )
+            correct_labels_test.append(int(label))
+            threaholder = -1.0
+            for i in range(0, 20):
+                if output[0] >= threaholder:
+                    predictions_test[i].append(1)
+                else:
+                    predictions_test[i].append(-1)
+                threaholder += 0.1
+
+            with open("dataset/cluster/4/" + name + "/" + test_data[0].split('_')[0] + '_' + test_data[1].split('_')[0] + '.txt', 'a') as fout:
+                fout.writelines(test_data[2] + '\t' + test_data[0] + '\t' + test_data[1] + '\t' + str(output[0]) + '\n')
+
+        # The choice of the threshold will not affect the clustering results
+        # We just investigate the max accuracy of our model's prediction of the relationship between chunks
+        maxstep = 0
+        maxaccuracy = 0
+        for i in range(0, 20):
+            accuracy = accuracy_score(correct_labels_test, predictions_test[i])
+            if accuracy > maxaccuracy:
+                maxaccuracy = accuracy
+                maxstep = i
+        threaholder = -1.0 + maxstep * 0.1
+        cm = confusion_matrix(correct_labels_test, predictions_test[maxstep], labels=[-1, 1])
+        tn, fp, fn, tp = cm.ravel()
+        accuracy = accuracy_score(correct_labels_test, predictions_test[maxstep])
+        print("threaholder: " + str(threaholder))
+        print("combine precision_test:", tp / (tp + fp))
+        print("combine recall_test:", tp / (tp + fn))
+        print("seperate precision_test:", tn / (tn + fn))
+        print("seperate recall_test:", tn / (tn + fp))
+        print("accuracy_test:" + str(accuracy))
+        print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
+        # print(learn_rate_var)
+        ff.close()
 
 
 if __name__ == '__main__':
@@ -190,11 +166,9 @@ if __name__ == '__main__':
     listtb = list()
 
     parser = ArgumentParser()
-    parser.add_argument("--kernal_num", dest="kernal_num", required=True)
+    parser.add_argument("--type", dest="type", required=True)
     args = parser.parse_args()
-
-    EPOCHS = 30
-    KERNAL_NUM = int(args.kernal_num)
+    data_type = args.type
 
     def _onehot(i, total):
         return [1.0 if j == i else 0.0 for j in range(total)]
