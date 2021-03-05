@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# modified on sanada's code: https://github.com/tklab-group/UntanglingCommit-sanada 
+# modified on sanada's code: https://github.com/tklab-group/UntanglingCommit-sanada
+# Artificially create composte commits
 from git import Repo
 import os
 import itertools

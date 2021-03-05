@@ -5,6 +5,7 @@ REPOS_DIR=dataset/pre
 ###########################################################
 
 for repo in $(ls ${REPOS_DIR}); do
+    SOURCE_DATASET=dataset/repositories/zeller-${repo}
     PRE_DATASET=${REPOS_DIR}/${repo}
     COMMIT_DIR=${PRE_DATASET}/commits
     COMMIT_CSV=${COMMIT_DIR}/all.csv

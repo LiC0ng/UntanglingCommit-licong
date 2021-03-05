@@ -1,5 +1,6 @@
-import random
-import itertools
+'''
+Split single-task commit into train set and test set
+'''
 from argparse import ArgumentParser
 
 if __name__ == "__main__":
