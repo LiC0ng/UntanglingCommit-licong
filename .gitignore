@@ -1,2 +1,6 @@
-/dataset/
 /__pycache__/
+/.vscode/
+/JavaExtractor/JPredict/.idea/
+/JavaExtractor/JPredict/JavaExtractor.iml
+
+/dataset/
