@@ -3,4 +3,15 @@
 /JavaExtractor/JPredict/.idea/
 /JavaExtractor/JPredict/JavaExtractor.iml
 
-/dataset/
+
+!dataset/
+
+dataset/*
+!/dataset/pre
+!/dataset/pre/*/
+
+dataset/pre/*/*
+!dataset/pre/*/commits
+
+dataset/pre/*/commits/*
+!dataset/pre/*/commits/all.csv
