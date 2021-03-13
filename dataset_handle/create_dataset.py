@@ -16,6 +16,8 @@ def create_dataset(index_dir, dest_dir, repo):
         output_path = dest_dir + '/train/' + type + '.txt'
         with open(output_path, 'a') as output_file:
             for i in range(minLen):
+                if positive_data[i] == "" or negative_data[i] =="":
+                    continue
                 output_file.writelines(positive_data[i] + '\n')
                 output_file.writelines(negative_data[i] + '\n')
 
