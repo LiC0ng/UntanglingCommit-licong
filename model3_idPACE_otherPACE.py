@@ -98,6 +98,7 @@ def train_model(embeddings):
             aaa += 1
 
     test_list = ['argouml', 'gwt', 'jruby', 'xstream', 'all']
+    print('------------Model 3' + data_type + '------------')
     for name in test_list:
         print('start test: ' + name)
         correct_labels_test = []
@@ -160,6 +161,7 @@ def train_model(embeddings):
         print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
         # print(learn_rate_var)
         ff.close()
+    print('---------------------------------------------')
 
 
 if __name__ == '__main__':
