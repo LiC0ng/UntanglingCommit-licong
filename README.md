@@ -39,6 +39,8 @@ After cloning this repository, you need to put each project's repository in `dat
 2. Secondly, unzip `zeller-(project-name)-(data).tar.gz`, rename them to `zeller-(project-name)`, and put them in `dataset/repositories`
 3. Lastly, check the initial state of the dataset. You should have single-task commits's list in `dataset/pre/(project名)/commits/all.csv` and repositories in `dataset/repositories/zeller-(project-name)`
 
+You can run `./initialize.sh` to check the experiment environment of this repository
+
 Other files under the dataset directory are automatically generated as the experimental procedure.
 
 
@@ -51,7 +53,25 @@ Other files under the dataset directory are automatically generated as the exper
 
 ## RQ 1,2
 
-### 1. Spitting dataset to trainset and testset
+### 1. Extracting chunk info and AST subtree
+Run the command below to extract chunk info and AST subtree
+>./dataset_handle/extract_chunk.sh
+
+For each project:
+* Extracting their chunks' information, and save the information in `dataset/pre/(project-name)/ranges/`
+* Extracting the chunk's corresponding AST subtree and save the information in:
+    * `dataset/pre/(project-name)/features/features1/` (no id flag)
+    * `dataset/pre/(project-name)/features/features1/` (with id flag)
+
+For all projects:
+* Merger their AST to:
+    * `dataset/features/features1/` (no id flag)
+    * `dataset/features/features1/` (with id flag)
+* Extract their toekn vocabulary:
+    * `dataset/dict/nodetype.txt` (node type name)
+    * `dataset/dict/onlyid.txt` (identifiers with id flag)
+
+### 2. Spitting dataset to trainset and testset
 Run the command below to split dataset for each project
 >./dataset_handle/separate_train_test.sh
 
@@ -61,38 +81,17 @@ For each project, using the single-task commits' list `dataset/pre/(project-name
 * positive test set :`dataset/pre/(project-name)/commits/test/true.csv`
 * negetive test set :`dataset/pre/(project-name)/commits/test/false.csv`
 
-### 2. Extracting chunk info and AST subtree
-Run the command below to extract chunk info and AST subtree
->./dataset_handle/dataset_handle.sh
-
-For each project:
-* Extracting their chunks' information, and save the information in `dataset/pre/(project-name)/ranges/`
-* Extracting the chunk's corresponding AST subtree and save the information in:
-    * `dataset/pre/(project-name)/features/features1/` (no id flag)
-    * `dataset/pre/(project-name)/features/features1/` (with id flag)
 * Generate chunk pairs and classify the chunks pairs into four categories:
     * ins(inner file same type): `dataset/pre/(project-name)/index/(train&test)/(true&false)/ins.txt`
     * ino(inner file opposite type): `dataset/pre/(project-name)/index/(train&test)/(true&false)/ino.txt`
     * its(inter file same type): `dataset/pre/(project-name)/index/(train&test)/(true&false)/its.txt`
     * ito(inter file opposite type): `dataset/pre/(project-name)/index/(train&test)/(true&false)/ito.txt`
 
-For all projects:
-* Merger their AST to:
-    * `dataset/features/features1/` (no id flag)
-    * `dataset/features/features1/` (with id flag)
-* Extract their vocabulary:
-    * `dataset/dict/nodetype.txt` (node type name)
-    * `dataset/dict/onlyid.txt` (identifiers with id flag)
-
-### 3. Generate the index of input data
-Run the command below to generate index of input data
->./dataset_handle/create_dataset.sh
-
 For each project and for each category's chunk pair, balance their positive data and negative data, and merge the balanced data to:
 * `dataset\dataset\train\(catagory-name).txt` (train set)
 * `dataset\dataset\test\(project-name)\(category-name).txt` (test set)
 
-### 4. Train and test four models
+### 3. Train and test four models
 Run the commands below to train and test our four models
 >./model1.sh
 
@@ -108,13 +107,13 @@ For RQ2, Sanada's approach can be accessed in this link： `https://github.com/t
 
 ## RQ 3
 
-### 5. Distribute the join probability for each artificial composite commit
+### 4. Distribute the join probability for each artificial composite commit
 Run the command below to distribute the predicted result to each artificial composite commit
 >./dataset_handle/cluster_data_concat.sh
 
 The outputs are placed in `dataset/result/(model-num)/(project-name))`
 
-### 6. Executing clustering
+### 5. Executing clustering
 Run the command below to output the untangling accuracy of each project's composite commits
 >./clustering.sh
 
