@@ -46,7 +46,7 @@ Other files under the dataset directory are automatically generated as the exper
 
 # Experiment Process
 ## Notice:
-1. For step 1~3, please run their commands in the docker environment
+1. For step 1~2, please run their commands in the docker environment
 2. If you want to re-split the dataset or re-experiment, please run `initialize.sh` to initialize the experiment environment
 3. Before you initialize the experiment environment, save your experiment data if necessary
 
@@ -107,7 +107,7 @@ For RQ2, Sanada's approach can be accessed in this link： `https://github.com/t
 
 ## RQ 3
 
-### 4. Distribute the join probability for each artificial composite commit
+### 4. Distribute the predicted relationship for each artificial composite commit
 Run the command below to distribute the predicted result to each artificial composite commit
 >./dataset_handle/cluster_data_concat.sh
 
