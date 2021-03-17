@@ -13,3 +13,4 @@ ${PYTHON} ./model1_idN2N_otherN2N.py --type ins
 ${PYTHON} ./model1_idN2N_otherN2N.py --type ino
 ${PYTHON} ./model1_idN2N_otherN2N.py --type its
 ${PYTHON} ./model1_idN2N_otherN2N.py --type ito
+${PYTHON} ./calculate_result.py --model_num 1

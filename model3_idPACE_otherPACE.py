@@ -160,6 +160,9 @@ def train_model(embeddings):
         print("max accuracy_test:" + str(accuracy))
         print("tp:" + str(tp) + " tn:" + str(tn) + " fp:" + str(fp) + " fn:" + str(fn))
         # print(learn_rate_var)
+        if name == "all":
+            with open("dataset/cluster/3/total_result.csv", 'a') as total_result:
+                total_result.writelines(str(tp) + '\t' + str(tn) + '\t' + str(fp) + '\t' + str(fn) + '\n')
         ff.close()
     print('---------------------------------------------')
 

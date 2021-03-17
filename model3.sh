@@ -13,3 +13,4 @@ ${PYTHON} ./model3_idPACE_otherPACE.py --type ins
 ${PYTHON} ./model3_idPACE_otherPACE.py --type ino
 ${PYTHON} ./model3_idPACE_otherPACE.py --type its
 ${PYTHON} ./model3_idPACE_otherPACE.py --type ito
+${PYTHON} ./calculate_result.py --model_num 3
