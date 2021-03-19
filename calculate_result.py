@@ -7,15 +7,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     model_num = args.model_num
 
-    tp, tn, fp, fn = 0
-    with open("dataset/cluster/" + model_num + "/total_result.csv", 'r') as total_result_file:
-        total_result = total_result_file.read().split('\n')
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    with open("dataset/cluster/" + model_num + "/total_result.txt", 'r') as total_result_file:
+        total_result = total_result_file.read().rstrip('\n').split('\n')
     for result in total_result:
         results = result.split('\t')
-        tp += int(results[1])
-        tn += int(results[2])
-        fp += int(results[3])
-        fn += int(results[4])
+        tp += int(results[0])
+        tn += int(results[1])
+        fp += int(results[2])
+        fn += int(results[3])
     print('------------Model ' + model_num + ' total result ------------' )
     print("combine precision:", tp / (tp + fp))
     print("combine recall:", tp / (tp + fn))
